@@ -15,20 +15,6 @@ from datetime import datetime
 import os  # Энэ мөр файлын хамгийн дээр заавал байх ёстой
 import ccxt
 
-def create_exchange():
-    # Railway-ийн Variables хэсгээс утгуудыг уншиж авч хувьсагчид онооно
-    API_KEY = os.getenv('BINANCE_API_KEY')
-    SECRET_KEY = os.getenv('BINANCE_SECRET')
-    
-    return ccxt.binance({
-        "apiKey": API_KEY,
-        "secret": SECRET_KEY,
-        "enableRateLimit": True,
-        "options": {
-            "defaultType": "spot"
-        }
-    })
-
 TESTNET    = True          # True = Binance Testnet (аюулгүй туршилт)
                            # False = Бодит мөнгө
 
@@ -68,12 +54,18 @@ log = logging.getLogger(__name__)
 # ─────────────────────────────────────────────
 # 🔌  EXCHANGE холболт
 # ─────────────────────────────────────────────
-def create_exchange() -> ccxt.binance:
-    exchange = ccxt.binance({
+def create_exchange():
+    # Railway-ийн Variables хэсгээс утгуудыг уншиж авч хувьсагчид онооно
+    API_KEY = os.getenv('BINANCE_API_KEY')
+    SECRET_KEY = os.getenv('BINANCE_SECRET')
+    
+    return ccxt.binance({
         "apiKey": API_KEY,
-        "secret": API_SECRET,
+        "secret": SECRET_KEY,
         "enableRateLimit": True,
-        "options": {"defaultType": "spot"},
+        "options": {
+            "defaultType": "spot"
+        }
     })
     if TESTNET:
         exchange.set_sandbox_mode(True)

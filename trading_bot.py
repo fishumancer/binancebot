@@ -12,9 +12,23 @@ import time
 import logging
 from datetime import datetime
 
-# ─────────────────────────────────────────────
-# ⚙️  ТОХИРГОО — зөвхөн энд өөрчил
-# ─────────────────────────────────────────────
+import os  # Энэ мөр файлын хамгийн дээр заавал байх ёстой
+import ccxt
+
+def create_exchange():
+    # Railway-ийн Variables хэсгээс утгуудыг уншиж авч хувьсагчид онооно
+    API_KEY = os.getenv('BINANCE_API_KEY')
+    SECRET_KEY = os.getenv('BINANCE_SECRET')
+    
+    return ccxt.binance({
+        "apiKey": API_KEY,
+        "secret": SECRET_KEY,
+        "enableRateLimit": True,
+        "options": {
+            "defaultType": "spot"
+        }
+    })
+
 TESTNET    = True          # True = Binance Testnet (аюулгүй туршилт)
                            # False = Бодит мөнгө
 

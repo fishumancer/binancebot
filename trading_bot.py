@@ -167,7 +167,6 @@ def get_signal(df: pd.DataFrame) -> str:
     """
 if len(df) < 3:
         return "HOLD"
-
     cur  = df.iloc[-1]
     prev = df.iloc[-2]
 
@@ -177,9 +176,9 @@ if len(df) < 3:
     rsi_ok_buy  = cur["rsi"] < RSI_BUY_MAX
     rsi_ok_sell = cur["rsi"] > RSI_SELL_MIN
 
-if ema_cross_up and rsi_ok_buy:
+    if ema_cross_up and rsi_ok_buy:
         return "BUY"
-if ema_cross_down or rsi_ok_sell:
+    if ema_cross_down or rsi_ok_sell:
         return "SELL"
     return "HOLD"
 
@@ -228,7 +227,7 @@ def process_symbol(
     trade_usdt: float,
 ) -> dict | None:
 
-try:
+    try:
         df = fetch_candles(exchange, symbol)
         df = add_indicators(df)
         signal = get_signal(df)
@@ -237,25 +236,25 @@ try:
         log.info(f"  {symbol:<12} price={price:<12.4f} RSI={rsi:<6} signal={signal}")
 
         # Position байхгүй → BUY дохио хүлээх
-if position is None:
+        if position is None:
             if signal == "BUY":
                 return buy(exchange, symbol, trade_usdt, price)
             return None
 
         # Position байна → Stop Loss / Take Profit / SELL дохио шалгах
-if price <= position["stop_loss"]:
+        if price <= position["stop_loss"]:
             sell(exchange, position, price, "STOP_LOSS")
             return None
-if price >= position["take_profit"]:
+        if price >= position["take_profit"]:
             sell(exchange, position, price, "TAKE_PROFIT")
             return None
-if signal == "SELL":
+        if signal == "SELL":
             sell(exchange, position, price, "SIGNAL")
             return None
 
-return position  # Position хадгална
+        return position  # Position хадгална
 
-except Exception as e:
+    except Exception as e:
         log.error(f"  {symbol} process алдаа: {e}")
         return position  # Алдааны үед position хадгална
 
@@ -275,7 +274,8 @@ def run():
     positions = {sym: None for sym in SYMBOLS}   # хоосон position
 
     while True:
-        now = datetime.utcnow().strftime("%H:%M:%S")
+        # Python 3.13 хувилбарт тохируулан UTC цагийг засав
+        now = datetime.now(datetime.UTC).strftime("%H:%M:%S")
         log.info(f"\n── {now} шалгаж байна ──")
 
         # 1/10 trade amount тооцоолно
@@ -284,7 +284,7 @@ def run():
         log.info(f"   Balance: {balance:.2f} USDT  |  Trade unit: {trade_usdt:.2f} USDT")
 
         # Хангалттай мөнгө байгаа эсэх
-if trade_usdt < 5:
+        if trade_usdt < 5:
             log.warning("⚠️  Balance хэтэрхий бага (< 50 USDT). Хүлээж байна...")
         else:
             for symbol in SYMBOLS:

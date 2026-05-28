@@ -256,3 +256,27 @@ if __name__ == "__main__":
         run()
     except KeyboardInterrupt:
         log.info("\n🛑 Bot зогссон (Ctrl+C)")
+      import threading
+from flask import Flask
+
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "Бот амжилттай ажиллаж байна!"
+
+def run_web_server():
+    # Render-ийн шаарддаг портыг унших (өгөгдөөгүй бол 8080)
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port)
+
+# Хэрэв таны үндсэн функц run() нэртэй бол:
+if __name__ == "__main__":
+    # 1. Ботыг цаана нь (background) тасралтгүй ажиллуулах
+    bot_thread = threading.Thread(target=run) # 'run' нь таны ботыг ажиллуулдаг үндсэн функцийн нэр байна
+    bot_thread.daemon = True
+    bot_thread.start()
+    
+    # 2. Вэб серверийг наана нь ажиллуулах (Render-ийг унтраахаас сэргийлнэ)
+    run_web_server()
+

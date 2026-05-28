@@ -5,15 +5,15 @@ Timeframe: 5 минут
 Balance  : 10 тэнцүү хэсэгт хуваана (нэг position = 1/10)
 """
 
+import os
 import ccxt
 import pandas as pd
 import pandas_ta as ta
 import time
 import logging
+import threading
 from datetime import datetime
-
-import os  # Энэ мөр файлын хамгийн дээр заавал байх ёстой
-import ccxt
+from flask import Flask
 
 TESTNET    = True          # True = Binance Testnet (аюулгүй туршилт)
                            # False = Бодит мөнгө
@@ -55,11 +55,11 @@ log = logging.getLogger(__name__)
 # 🔌  EXCHANGE холболт
 # ─────────────────────────────────────────────
 def create_exchange():
-    # Railway-ийн Variables хэсгээс утгуудыг уншиж авч хувьсагчид онооно
+    # Render-ийн Environment Variables-оос унших
     API_KEY = os.getenv('BINANCE_API_KEY')
     SECRET_KEY = os.getenv('BINANCE_SECRET')
     
-    return ccxt.binance({
+    exchange = ccxt.binance({
         "apiKey": API_KEY,
         "secret": SECRET_KEY,
         "enableRateLimit": True,
@@ -67,11 +67,13 @@ def create_exchange():
             "defaultType": "spot"
         }
     })
-if TESTNET:
+    
+    if TESTNET:
         exchange.set_sandbox_mode(True)
         log.info("🟡 TESTNET горимд ажиллаж байна")
     else:
         log.info("🔴 БОДИТ МӨНГӨТЭЙ ажиллаж байна")
+        
     return exchange
 
 
@@ -98,6 +100,53 @@ def fetch_candles(exchange: ccxt.binance, symbol: str, limit: int = 100) -> pd.D
     df = pd.DataFrame(ohlcv, columns=["ts", "open", "high", "low", "close", "volume"])
     df["ts"] = pd.to_datetime(df["ts"], unit="ms")
     return df
+
+# ─────────────────────────────────────────────
+# 🌐  RENDER ВЭБ СЕРВЕР (Унтахаас сэргийлэх)
+# ─────────────────────────────────────────────
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "Бот амжилттай ажиллаж байна!"
+
+def run_web_server():
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port)
+
+# ─────────────────────────────────────────────
+# 🚀  ҮНДЭСЭН АЖИЛЛУУЛАХ ХЭСЭГ
+# ─────────────────────────────────────────────
+# Анхаар: Таны хуучин кодын хамгийн доор байсан run() функцийг 
+# энд дуудаж өгөх хэрэгтэй. (Жишээлбэл доорх шиг)
+
+def run():
+    log.info("==================================================")
+    log.info("🤖 Spot Trading Bot эхэллээ")
+    log.info(f"   Symbols   : {SYMBOLS}")
+    log.info(f"   Timeframe : {TIMEFRAME}")
+    log.info(f"   SL / TP   : {STOP_LOSS_PCT*100}% / {TAKE_PROFIT_PCT*100}%")
+    log.info("==================================================")
+    
+    exchange = create_exchange()
+    
+    while True:
+        try:
+            # Таны кодын үндсэн арилжаа хийдэг логик энд байна...
+            # (Энд таны хуучин кодын while True доторх хэсэг үргэлжилнэ)
+            pass 
+        except Exception as e:
+            log.error(f"Алдаа гарлаа: {e}")
+        time.sleep(CHECK_INTERVAL)
+
+if __name__ == "__main__":
+    # 1. Ботыг цаана нь (background) ажиллуулах
+    bot_thread = threading.Thread(target=run)
+    bot_thread.daemon = True
+    bot_thread.start()
+    
+    # 2. Вэб серверийг наана нь ажиллуулах
+    run_web_server()
 
 
 def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
